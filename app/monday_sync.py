@@ -43,11 +43,18 @@ def lookup_job_number_id(job_number):
     response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
     try:
         data = response.json()
+        if "data" not in data:
+            print("❌ lookup_job_number_id: 'data' key missing")
+            print("🔎 Full response:")
+            print(response.text)
+            return None
         for item in data["data"]["items_page"]["items"]:
             if item["name"].strip().upper() == job_number.strip().upper():
                 return int(item["id"])
     except Exception as e:
-        print("❌ Failed to look up Job Number:", str(e))
+        print("❌ Exception during Job Number lookup:", str(e))
+        print("🔎 Raw response:")
+        print(response.text)
     return None
 
 def create_sales_quote_item(job_number, vendor):
