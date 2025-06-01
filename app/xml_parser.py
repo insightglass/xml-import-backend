@@ -5,7 +5,7 @@ def parse_xml_and_push_to_monday(xml_bytes, vendor: str, markup: float, job_numb
     root = tree.getroot()
     items = []
 
-    products = root.findall(".//product")
+    products = root.findall(".//Product")
 
     for product in products:
         try:
