@@ -27,8 +27,8 @@ def parse_xml_and_push_to_monday(xml_bytes, vendor: str, markup: float, job_numb
         })
 
     # Append fixed line items
-    items.append({"Item Name": "Install Labor"})
-    items.append({"Item Name": "Lock and Slide"})
+    items.append({"Item Name": "Install Labor2"})
+    items.append({"Item Name": "Lock and Slide2"})
 
     return {
         "items_parsed": len(items),
