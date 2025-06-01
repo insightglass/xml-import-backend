@@ -28,9 +28,13 @@ JOB_NUMBER_COLUMN_ID = "board_relation_mkrfcxnh"
 def lookup_job_number_id(job_number):
     query = """
     query {
-      items_by_board(board_id: %s) {
-        id
-        name
+      boards(ids: [%s]) {
+        items_page(limit: 200) {
+          items {
+            id
+            name
+          }
+        }
       }
     }
     """ % JOB_NUMBERS_BOARD_ID
@@ -42,7 +46,7 @@ def lookup_job_number_id(job_number):
             print("🔎 Full response:")
             print(response.text)
             return None
-        for item in data["data"]["items_by_board"]:
+        for item in data["data"]["boards"][0]["items_page"]["items"]:
             if item["name"].strip().upper() == job_number.strip().upper():
                 return int(item["id"])
     except Exception as e:
@@ -127,4 +131,3 @@ def push_to_monday_quotes_board(parsed):
 
     for item in items:
         create_subitem(parent_item_id, item)
-
