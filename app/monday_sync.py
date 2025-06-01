@@ -10,7 +10,7 @@ HEADERS = {
 }
 
 SALES_QUOTES_BOARD_ID = 9273227645
-JOB_NUMBERS_BOARD_ID = 9273230844
+JOB_NUMBERS_BOARD_ID = 9273226835
 
 SUBITEMS_COLUMN_IDS = {
     "Item Name": "text",
@@ -131,3 +131,4 @@ def push_to_monday_quotes_board(parsed):
 
     for item in items:
         create_subitem(parent_item_id, item)
+
