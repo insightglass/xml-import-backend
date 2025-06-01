@@ -27,19 +27,14 @@ JOB_NUMBER_COLUMN_ID = "board_relation_mkrfcxnh"
 
 def lookup_job_number_id(job_number):
     query = """
-    query ($boardId: [ID!]) {
-      boards(ids: $boardId) {
-        items {
-          id
-          name
-        }
+    query {
+      items_by_board(board_id: %s) {
+        id
+        name
       }
     }
-    """
-    variables = {
-        "boardId": [str(JOB_NUMBERS_BOARD_ID)]
-    }
-    response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
+    """ % JOB_NUMBERS_BOARD_ID
+    response = requests.post(API_URL, json={"query": query}, headers=HEADERS)
     try:
         data = response.json()
         if "data" not in data:
@@ -47,7 +42,7 @@ def lookup_job_number_id(job_number):
             print("🔎 Full response:")
             print(response.text)
             return None
-        for item in data["data"]["boards"][0]["items"]:
+        for item in data["data"]["items_by_board"]:
             if item["name"].strip().upper() == job_number.strip().upper():
                 return int(item["id"])
     except Exception as e:
