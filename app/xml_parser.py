@@ -6,15 +6,16 @@ def parse_xml_and_push_to_monday(xml_bytes, vendor: str, markup: float, job_numb
     root = ET.fromstring(xml_string)
     items = []
 
-    # Extract inner XML from CDATA inside <quoteheader>
+    # Extract and decode <quoteheader> CDATA
     quoteheader = root.find(".//quoteheader")
     if quoteheader is not None and quoteheader.text:
         try:
-            # Unescape HTML/XML characters
-            inner_xml_text = html.unescape(quoteheader.text.strip())
-            inner_root = ET.fromstring(inner_xml_text)
+            # Double-unescape
+            step1 = html.unescape(quoteheader.text.strip())
+            step2 = html.unescape(step1)
+            inner_root = ET.fromstring(step2)
 
-            # Strip namespaces
+            # Strip namespaces (if any)
             for elem in inner_root.iter():
                 if '}' in elem.tag:
                     elem.tag = elem.tag.split('}', 1)[1]
@@ -41,13 +42,13 @@ def parse_xml_and_push_to_monday(xml_bytes, vendor: str, markup: float, job_numb
                 })
 
         except Exception as e:
-            return {"error": f"Inner CDATA parse failed: {str(e)}"}
+            return {"error": f"Double unescape or inner XML parse failed: {str(e)}"}
     else:
         return {"error": "quoteheader CDATA not found or empty"}
 
     # Append fixed line items
-    items.append({"Item Name": "Install Labor7"})
-    items.append({"Item Name": "Lock and Slide7"})
+    items.append({"Item Name": "Install Labor FINAL"})
+    items.append({"Item Name": "Lock and Slide FINAL"})
 
     return {
         "items_parsed": len(items),
