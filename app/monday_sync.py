@@ -127,3 +127,4 @@ def push_to_monday_quotes_board(parsed):
 
     for item in items:
         create_subitem(parent_item_id, item)
+
