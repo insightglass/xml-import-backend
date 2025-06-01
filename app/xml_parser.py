@@ -7,8 +7,8 @@ def strip_namespace(tree_root):
     return tree_root
 
 def parse_xml_and_push_to_monday(xml_bytes, vendor: str, markup: float, job_number: str):
-    tree = ET.ElementTree(ET.fromstring(xml_bytes))
-    root = strip_namespace(tree.getroot())
+    xml_string = xml_bytes.decode("utf-8")
+    root = strip_namespace(ET.fromstring(xml_string))
     items = []
 
     for product in root.findall(".//Product"):
@@ -31,8 +31,8 @@ def parse_xml_and_push_to_monday(xml_bytes, vendor: str, markup: float, job_numb
         })
 
     # Append fixed line items
-    items.append({"Item Name": "Install Labor4"})
-    items.append({"Item Name": "Lock and Slide4"})
+    items.append({"Item Name": "Install Labor5"})
+    items.append({"Item Name": "Lock and Slide5"})
 
     return {
         "items_parsed": len(items),
