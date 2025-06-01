@@ -10,6 +10,7 @@ HEADERS = {
 }
 
 SALES_QUOTES_BOARD_ID = 9273227645
+JOB_NUMBERS_BOARD_ID = 9273230844
 
 SUBITEMS_COLUMN_IDS = {
     "Item Name": "text",
@@ -22,9 +23,45 @@ SUBITEMS_COLUMN_IDS = {
     "Unit Price (Markup)": "price"
 }
 
-JOB_NUMBER_COLUMN_ID = "text_mkrgwwwh"
+JOB_NUMBER_COLUMN_ID = "board_relation_mkrfcxnh"
+
+def lookup_job_number_id(job_number):
+    query = """
+    query ($boardId: [Int], $limit: Int) {
+      items_page(board_id: $boardId, limit: $limit) {
+        items {
+          id
+          name
+        }
+      }
+    }
+    """
+    variables = {
+        "boardId": JOB_NUMBERS_BOARD_ID,
+        "limit": 200
+    }
+    response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
+    try:
+        data = response.json()
+        for item in data["data"]["items_page"]["items"]:
+            if item["name"].strip().upper() == job_number.strip().upper():
+                return int(item["id"])
+    except Exception as e:
+        print("❌ Failed to look up Job Number:", str(e))
+    return None
 
 def create_sales_quote_item(job_number, vendor):
+    job_id = lookup_job_number_id(job_number)
+    if not job_id:
+        print(f"❌ Job Number '{job_number}' not found in Job Numbers board.")
+        return None
+
+    column_values = {
+        JOB_NUMBER_COLUMN_ID: {
+            "linkedPulseIds": [{"linkedPulseId": job_id}]
+        }
+    }
+
     query = """
     mutation ($boardId: ID!, $itemName: String!, $columnVals: JSON!) {
       create_item(board_id: $boardId, item_name: $itemName, column_values: $columnVals) {
@@ -32,7 +69,6 @@ def create_sales_quote_item(job_number, vendor):
       }
     }
     """
-    column_values = {JOB_NUMBER_COLUMN_ID: job_number}
     variables = {
         "boardId": str(SALES_QUOTES_BOARD_ID),
         "itemName": f"Quote from {vendor} ({job_number})",
