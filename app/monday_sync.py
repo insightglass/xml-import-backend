@@ -81,6 +81,8 @@ def push_to_monday_quotes_board(parsed):
     vendor = parsed["vendor"]
     items = parsed["items"]
 
+    print(f"✅ Starting Monday.com sync for {job_number} ({vendor}) with {len(items)} subitems")
+
     parent_item_id = create_sales_quote_item(job_number, vendor)
     if not parent_item_id:
         print("❌ Failed to create parent item. Aborting subitem creation.")
