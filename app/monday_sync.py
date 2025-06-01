@@ -99,7 +99,7 @@ def create_subitem(parent_item_id, subitem_data):
 
     query = """
     mutation ($parentId: Int!, $itemName: String!, $columnVals: JSON!) {
-      create_subitem(parent_item_id: $parentId, item_name: $itemName, column_values: $columnVals) {
+      create_subitem(parent_id: $parentId, item_name: $itemName, column_values: $columnVals) {
         id
       }
     }
@@ -132,4 +132,3 @@ def push_to_monday_quotes_board(parsed):
 
     for item in items:
         create_subitem(parent_item_id, item)
-
