@@ -27,7 +27,7 @@ JOB_NUMBER_COLUMN_ID = "board_relation_mkrfcxnh"
 
 def lookup_job_number_id(job_number):
     query = """
-    query ($boardId: [Int]) {
+    query ($boardId: [ID!]) {
       boards(ids: $boardId) {
         items {
           id
@@ -37,7 +37,7 @@ def lookup_job_number_id(job_number):
     }
     """
     variables = {
-        "boardId": [JOB_NUMBERS_BOARD_ID]
+        "boardId": [str(JOB_NUMBERS_BOARD_ID)]
     }
     response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
     try:
