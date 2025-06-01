@@ -26,7 +26,7 @@ JOB_NUMBER_COLUMN_ID = "text_mkrgwwwh"
 
 def create_sales_quote_item(job_number, vendor):
     query = """
-    mutation ($boardId: Int!, $itemName: String!, $columnVals: JSON!) {
+    mutation ($boardId: ID!, $itemName: String!, $columnVals: JSON!) {
       create_item(board_id: $boardId, item_name: $itemName, column_values: $columnVals) {
         id
       }
@@ -34,7 +34,7 @@ def create_sales_quote_item(job_number, vendor):
     """
     column_values = {JOB_NUMBER_COLUMN_ID: job_number}
     variables = {
-        "boardId": SALES_QUOTES_BOARD_ID,
+        "boardId": str(SALES_QUOTES_BOARD_ID),
         "itemName": f"Quote from {vendor} ({job_number})",
         "columnVals": column_values
     }
