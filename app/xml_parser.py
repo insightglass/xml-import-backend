@@ -1,54 +1,51 @@
 import xml.etree.ElementTree as ET
-import html
 
 def parse_xml_and_push_to_monday(xml_bytes, vendor: str, markup: float, job_number: str):
-    xml_string = xml_bytes.decode("utf-8", errors="ignore")
-    root = ET.fromstring(xml_string)
+    tree = ET.ElementTree(ET.fromstring(xml_bytes.decode("utf-8", errors="ignore")))
+    root = tree.getroot()
     items = []
 
-    # Extract and decode <quoteheader> CDATA
-    quoteheader = root.find(".//quoteheader")
-    if quoteheader is not None and quoteheader.text:
+    for lineitem in root.findall(".//lineitem"):
+        # NetSize
+        frame_width = lineitem.find("FrameWidth").get("Value", "").strip() if lineitem.find("FrameWidth") is not None else ""
+        frame_height = lineitem.find("FrameHeight").get("Value", "").strip() if lineitem.find("FrameHeight") is not None else ""
+        net_size = f"{frame_width} x {frame_height}" if frame_width and frame_height else ""
+
+        # Basic fields
+        qty = lineitem.find("quantity").get("Value", "").strip() if lineitem.find("quantity") is not None else "0"
+        list_price = lineitem.find("listprice").get("Value", "").strip() if lineitem.find("listprice") is not None else "0.0"
+        model = lineitem.find("category1").get("Value", "").strip() if lineitem.find("category1") is not None else ""
+        item_desc = lineitem.findtext("description", "").strip()
+        room = lineitem.findtext("room", "").strip()
+
+        # Product codes
+        product_codes = [
+            w.findtext("productcode", "").strip()
+            for w in lineitem.findall(".//extradata/windows/window")
+        ]
+        product_code_str = ", ".join(filter(None, product_codes))
+
         try:
-            # Double-unescape
-            step1 = html.unescape(quoteheader.text.strip())
-            step2 = html.unescape(step1)
-            inner_root = ET.fromstring(step2)
+            quantity_val = int(qty)
+            list_price_val = float(list_price)
+        except ValueError:
+            quantity_val = 0
+            list_price_val = 0.0
 
-            # Strip namespaces (if any)
-            for elem in inner_root.iter():
-                if '}' in elem.tag:
-                    elem.tag = elem.tag.split('}', 1)[1]
+        items.append({
+            "Item Name": product_code_str,
+            "Supplier": vendor,
+            "Model": model,
+            "NetSize": net_size,
+            "ItemDesc": item_desc,
+            "Room": room,
+            "Quantity": quantity_val,
+            "Unit Price (Markup)": round(list_price_val * markup, 2)
+        })
 
-            products = inner_root.findall(".//Product")
-
-            for product in products:
-                try:
-                    quantity = int(product.findtext("Qty", "0"))
-                    list_price = float(product.findtext("ListPrice", "0.0"))
-                except ValueError:
-                    quantity = 0
-                    list_price = 0.0
-
-                items.append({
-                    "Item Name": product.findtext("ProductCode", "").strip(),
-                    "Supplier": vendor,
-                    "Model": product.findtext("Model", "").strip(),
-                    "NetSize": product.findtext("NetSize", "").strip(),
-                    "ItemDesc": product.findtext("ItemDesc", "").strip(),
-                    "Room": product.findtext("Room", "").strip(),
-                    "Quantity": quantity,
-                    "Unit Price (Markup)": round(list_price * markup, 2)
-                })
-
-        except Exception as e:
-            return {"error": f"Double unescape or inner XML parse failed: {str(e)}"}
-    else:
-        return {"error": "quoteheader CDATA not found or empty"}
-
-    # Append fixed line items
-    items.append({"Item Name": "Install Labor FINAL"})
-    items.append({"Item Name": "Lock and Slide FINAL"})
+    # Append final line items
+    items.append({"Item Name": "Install Labor Amsco"})
+    items.append({"Item Name": "Lock and Slide Amsco"})
 
     return {
         "items_parsed": len(items),
