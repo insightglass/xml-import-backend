@@ -27,8 +27,8 @@ JOB_NUMBER_COLUMN_ID = "board_relation_mkrfcxnh"
 
 def lookup_job_number_id(job_number):
     query = """
-    query ($boardId: [Int], $limit: Int) {
-      items_page(board_id: $boardId, limit: $limit) {
+    query ($boardId: [Int]) {
+      boards(ids: $boardId) {
         items {
           id
           name
@@ -37,8 +37,7 @@ def lookup_job_number_id(job_number):
     }
     """
     variables = {
-        "boardId": JOB_NUMBERS_BOARD_ID,
-        "limit": 200
+        "boardId": [JOB_NUMBERS_BOARD_ID]
     }
     response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
     try:
@@ -48,7 +47,7 @@ def lookup_job_number_id(job_number):
             print("🔎 Full response:")
             print(response.text)
             return None
-        for item in data["data"]["items_page"]["items"]:
+        for item in data["data"]["boards"][0]["items"]:
             if item["name"].strip().upper() == job_number.strip().upper():
                 return int(item["id"])
     except Exception as e:
