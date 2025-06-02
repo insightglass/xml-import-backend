@@ -12,16 +12,14 @@ HEADERS = {
 SALES_QUOTES_BOARD_ID = 9273227645
 JOB_NUMBERS_BOARD_ID = 9273226835
 
-# ✅ Final verified subitem column IDs
-SUBITEMS_COLUMN_IDS = {
-    "Item Name": "text_mkrgppk7",
-    "Supplier": "text_mkrgzzf8",
-    "Model": "text_mkrgrfy",
-    "NetSize": "text_mkrgfkbd",
-    "ItemDesc": "text_mkrg3mha",
-    "Room": "text_mkrgw671",
-    "Quantity": "numeric_mkrgq5ew",
-    "Unit Price (Markup)": "numeric_mkrga809"
+EXPECTED_TITLES = {
+    "Supplier",
+    "Model",
+    "NetSize",
+    "ItemDesc",
+    "Room",
+    "Quantity",
+    "Unit Price (Markup)"
 }
 
 JOB_NUMBER_COLUMN_ID = "board_relation_mkrfcxnh"
@@ -84,6 +82,31 @@ def create_sales_quote_item(job_number, vendor):
         print(response.text)
         return None
 
+def fetch_column_id_map(subitem_id):
+    query = f"""
+    query {{
+      items(ids: [{subitem_id}]) {{
+        column_values {{
+          id
+          title
+        }}
+      }}
+    }}
+    """
+    response = requests.post(API_URL, json={"query": query}, headers=HEADERS)
+    data = response.json()
+    try:
+        mapping = {}
+        for col in data["data"]["items"][0]["column_values"]:
+            title = col["title"].strip()
+            if title in EXPECTED_TITLES:
+                mapping[title] = col["id"]
+        return mapping
+    except Exception as e:
+        print(f"❌ Failed to parse column map for subitem {subitem_id}:", e)
+        print(response.text)
+        return {}
+
 def create_subitem(parent_item_id, subitem_data):
     subitem_name = subitem_data.get("Item Name", "")
 
@@ -109,12 +132,14 @@ def create_subitem(parent_item_id, subitem_data):
         print(response.text)
         return
 
-    # Set all other fields using change_column_value
-    for field, column_id in SUBITEMS_COLUMN_IDS.items():
-        if field == "Item Name":
+    column_map = fetch_column_id_map(subitem_id)
+
+    for title, value in subitem_data.items():
+        if title == "Item Name" or not value:
             continue
-        value = str(subitem_data.get(field, "")).strip()
-        if not value:
+        column_id = column_map.get(title)
+        if not column_id:
+            print(f"⚠️ No column ID found for '{title}' in subitem '{subitem_name}'")
             continue
 
         mutation = """
@@ -127,12 +152,12 @@ def create_subitem(parent_item_id, subitem_data):
         variables = {
             "itemId": int(subitem_id),
             "columnId": column_id,
-            "value": json.dumps(value)
+            "value": json.dumps(str(value))
         }
 
         resp = requests.post(API_URL, json={"query": mutation, "variables": variables}, headers=HEADERS)
         if "errors" in resp.text:
-            print(f"❌ Error setting '{field}' on subitem '{subitem_name}'")
+            print(f"❌ Error setting '{title}' on subitem '{subitem_name}'")
             print(resp.text)
 
 def push_to_monday_quotes_board(parsed):
@@ -149,5 +174,3 @@ def push_to_monday_quotes_board(parsed):
 
     for item in items:
         create_subitem(parent_item_id, item)
-
-
