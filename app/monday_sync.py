@@ -13,15 +13,16 @@ HEADERS = {
 SALES_QUOTES_BOARD_ID = 9273227645
 JOB_NUMBERS_BOARD_ID = 9273226835
 
+# ✅ Correct subitem column IDs
 SUBITEMS_COLUMN_IDS = {
-    "Item Name": "text",
-    "Supplier": "supplier",
-    "Model": "model",
-    "NetSize": "netsize",
-    "ItemDesc": "itemdesc",
-    "Room": "room",
-    "Quantity": "qty",
-    "Unit Price (Markup)": "price"
+    "Item Name": "text_mkrgppk7",
+    "Supplier": "text_mkrgzzf8",
+    "Model": "text_mkrgrfy",
+    "NetSize": "text_mkrgfkbd",
+    "ItemDesc": "text_mkrg3mha",
+    "Room": "text_mkrgw671",
+    "Quantity": "numeric_mkrgq5ew",
+    "Unit Price (Markup)": "numeric_mkrga809"
 }
 
 JOB_NUMBER_COLUMN_ID = "board_relation_mkrfcxnh"
@@ -84,9 +85,6 @@ def create_sales_quote_item(job_number, vendor):
         "columnVals": json.dumps(column_values)
     }
 
-    print("🔎 Full mutation payload (main item):")
-    print(json.dumps({"query": query, "variables": variables}, indent=2))
-
     response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
     try:
         data = response.json()
@@ -120,14 +118,13 @@ def create_subitem(parent_item_id, subitem_data):
         "columnVals": json.dumps(column_values)
     }
 
-    print(f"🔎 Full mutation payload (subitem '{subitem_name}'):")
-    print(json.dumps({"query": query, "variables": variables}, indent=2))
-
     response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
     try:
         data = response.json()
         if "errors" in data:
             print(f"❌ Error creating subitem '{subitem_name}':", data["errors"])
+        else:
+            print(f"🟢 Created subitem '{subitem_name}' (ID: {data['data']['create_subitem']['id']})")
     except Exception as e:
         print(f"❌ Failed to parse response for subitem '{subitem_name}':", str(e))
         print(response.text)
