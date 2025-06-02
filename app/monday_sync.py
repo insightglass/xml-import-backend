@@ -83,30 +83,36 @@ def create_sales_quote_item(job_number, vendor):
         print(response.text)
         return None
 
-def fetch_column_id_map(subitem_id):
+def get_subitem_column_ids_from_parent(parent_id):
     query = f"""
     query {{
-      items(ids: [{subitem_id}]) {{
-        column_values {{
-          id
-          title
+      boards(ids: [{SALES_QUOTES_BOARD_ID}]) {{
+        items(ids: [{parent_id}]) {{
+          subitems {{
+            id
+            column_values {{
+              id
+              title
+            }}
+          }}
         }}
       }}
     }}
     """
-    response = requests.post(API_URL, json={"query": query}, headers=HEADERS)
-    data = response.json()
-    try:
-        mapping = {}
-        for col in data["data"]["items"][0]["column_values"]:
-            title = col["title"].strip()
-            if title in EXPECTED_TITLES:
-                mapping[title] = col["id"]
-        return mapping
-    except Exception as e:
-        print(f"❌ Failed to parse column map for subitem {subitem_id}:", e)
-        print(response.text)
-        return {}
+    for attempt in range(5):
+        time.sleep(1)
+        response = requests.post(API_URL, json={"query": query}, headers=HEADERS)
+        try:
+            data = response.json()
+            subitems = data["data"]["boards"][0]["items"][0]["subitems"]
+            if subitems:
+                subitem = subitems[-1]  # last created subitem
+                mapping = {cv["title"]: cv["id"] for cv in subitem["column_values"] if cv["title"] in EXPECTED_TITLES}
+                return subitem["id"], mapping
+        except Exception as e:
+            print("Retrying column ID fetch due to:", str(e))
+    print("❌ Failed to retrieve subitem column mapping after retries.")
+    return None, {}
 
 def create_subitem(parent_item_id, subitem_data):
     subitem_name = subitem_data.get("Item Name", "")
@@ -133,10 +139,13 @@ def create_subitem(parent_item_id, subitem_data):
         print(response.text)
         return
 
-    # Wait to ensure columns are initialized
+    # Delay then fetch column mapping from parent
     time.sleep(2)
+    confirmed_id, column_map = get_subitem_column_ids_from_parent(parent_item_id)
 
-    column_map = fetch_column_id_map(subitem_id)
+    if str(subitem_id) != str(confirmed_id):
+        print(f"⚠️ Subitem mismatch or not found for {subitem_name} (Expected ID: {subitem_id}, Got: {confirmed_id})")
+        return
 
     for title, value in subitem_data.items():
         if title == "Item Name" or not value:
