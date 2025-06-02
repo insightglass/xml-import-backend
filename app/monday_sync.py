@@ -81,7 +81,7 @@ def create_sales_quote_item(job_number, vendor):
     variables = {
         "boardId": str(SALES_QUOTES_BOARD_ID),
         "itemName": f"Quote from {vendor} ({job_number})",
-        "columnVals": column_values
+        "columnVals": json.dumps(column_values)
     }
 
     print("🔎 Full mutation payload:")
