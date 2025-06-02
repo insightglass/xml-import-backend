@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import requests
 
 MONDAY_API_KEY = os.getenv("MONDAY_API_KEY")
@@ -132,6 +133,9 @@ def create_subitem(parent_item_id, subitem_data):
         print(response.text)
         return
 
+    # Wait to ensure columns are initialized
+    time.sleep(2)
+
     column_map = fetch_column_id_map(subitem_id)
 
     for title, value in subitem_data.items():
@@ -174,3 +178,5 @@ def push_to_monday_quotes_board(parsed):
 
     for item in items:
         create_subitem(parent_item_id, item)
+
+#
