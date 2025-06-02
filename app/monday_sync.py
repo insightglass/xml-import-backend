@@ -12,7 +12,9 @@ HEADERS = {
 SALES_QUOTES_BOARD_ID = 9273227645
 JOB_NUMBERS_BOARD_ID = 9273226835
 
+# ✅ Final verified subitem column IDs
 SUBITEMS_COLUMN_IDS = {
+    "Item Name": "text_mkrgppk7",
     "Supplier": "text_mkrgzzf8",
     "Model": "text_mkrgrfy",
     "NetSize": "text_mkrgfkbd",
@@ -107,7 +109,10 @@ def create_subitem(parent_item_id, subitem_data):
         print(response.text)
         return
 
+    # Set all other fields using change_column_value
     for field, column_id in SUBITEMS_COLUMN_IDS.items():
+        if field == "Item Name":
+            continue
         value = str(subitem_data.get(field, "")).strip()
         if not value:
             continue
