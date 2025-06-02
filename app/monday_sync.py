@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 
 MONDAY_API_KEY = os.getenv("MONDAY_API_KEY")
@@ -67,6 +68,9 @@ def create_sales_quote_item(job_number, vendor):
         }
     }
 
+    print("🔎 column_values JSON:")
+    print(json.dumps(column_values, indent=2))
+
     query = """
     mutation ($boardId: ID!, $itemName: String!, $columnVals: JSON!) {
       create_item(board_id: $boardId, item_name: $itemName, column_values: $columnVals) {
@@ -79,6 +83,10 @@ def create_sales_quote_item(job_number, vendor):
         "itemName": f"Quote from {vendor} ({job_number})",
         "columnVals": column_values
     }
+
+    print("🔎 Full mutation payload:")
+    print(json.dumps({"query": query, "variables": variables}, indent=2))
+
     response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
     try:
         data = response.json()
