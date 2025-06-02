@@ -68,7 +68,7 @@ def create_sales_quote_item(job_number, vendor):
         }
     }
 
-    print("🔎 column_values JSON:")
+    print("🔎 column_values JSON (main item):")
     print(json.dumps(column_values, indent=2))
 
     query = """
@@ -84,7 +84,7 @@ def create_sales_quote_item(job_number, vendor):
         "columnVals": json.dumps(column_values)
     }
 
-    print("🔎 Full mutation payload:")
+    print("🔎 Full mutation payload (main item):")
     print(json.dumps({"query": query, "variables": variables}, indent=2))
 
     response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
@@ -104,6 +104,9 @@ def create_subitem(parent_item_id, subitem_data):
         SUBITEMS_COLUMN_IDS[key]: str(subitem_data.get(key, "")) for key in SUBITEMS_COLUMN_IDS if key != "Item Name"
     }
 
+    print(f"🔎 column_values JSON (subitem '{subitem_name}'):")
+    print(json.dumps(column_values, indent=2))
+
     query = """
     mutation ($parentId: Int!, $itemName: String!, $columnVals: JSON!) {
       create_subitem(parent_id: $parentId, item_name: $itemName, column_values: $columnVals) {
@@ -114,8 +117,12 @@ def create_subitem(parent_item_id, subitem_data):
     variables = {
         "parentId": int(parent_item_id),
         "itemName": subitem_name,
-        "columnVals": column_values
+        "columnVals": json.dumps(column_values)
     }
+
+    print(f"🔎 Full mutation payload (subitem '{subitem_name}'):")
+    print(json.dumps({"query": query, "variables": variables}, indent=2))
+
     response = requests.post(API_URL, json={"query": query, "variables": variables}, headers=HEADERS)
     try:
         data = response.json()
@@ -139,4 +146,5 @@ def push_to_monday_quotes_board(parsed):
 
     for item in items:
         create_subitem(parent_item_id, item)
+
 
